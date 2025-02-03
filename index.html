@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مدیریت مقالات</title>
+</head>
+<body>
+  <!-- بخش فرم برای ارسال مقاله -->
+  <h1>افزودن مقاله جدید</h1>
+  <form id="articleForm">
+    <label for="title">عنوان مقاله:</label><br>
+    <input type="text" id="title" name="title" required><br><br>
+
+    <label for="content">محتوا:</label><br>
+    <textarea id="content" name="content" required></textarea><br><br>
+
+    <label for="published_date">تاریخ انتشار (فرمت: YYYY-MM-DD HH:MM:SS):</label><br>
+    <input type="text" id="published_date" name="published_date" required><br><br>
+
+    <button type="submit">ارسال مقاله</button>
+  </form>
+
+  <hr>
+
+  <!-- بخش نمایش لیست مقالات -->
+  <h1>لیست مقالات</h1>
+  <ul id="articles"></ul>
+
+  <script>
+    // تابع برای دریافت مقالات از API و نمایش آن‌ها در لیست
+    function fetchArticles() {
+      fetch('http://127.0.0.1:5000/api/articles/')
+        .then(response => response.json())
+        .then(data => {
+          const articlesList = document.getElementById("articles");
+          articlesList.innerHTML = ""; // پاکسازی لیست قبلی
+          data.forEach(article => {
+            let li = document.createElement("li");
+            li.textContent = `📌 ${article.title}: ${article.content}`;
+            articlesList.appendChild(li);
+          });
+        })
+        .catch(error => console.error('خطا در دریافت داده‌ها:', error));
+    }
+
+    // دریافت مقالات در ابتدا
+    fetchArticles();
+
+    // اضافه کردن رویداد ارسال فرم
+    document.getElementById('articleForm').addEventListener('submit', function(event) {
+      event.preventDefault(); // جلوگیری از بارگذاری مجدد صفحه
+
+      // دریافت مقادیر وارد شده در فرم
+      const title = document.getElementById('title').value;
+      const content = document.getElementById('content').value;
+      const published_date = document.getElementById('published_date').value;
+
+      // ساخت شیء JSON برای ارسال
+      const articleData = {
+        title: title,
+        content: content,
+        published_date: published_date
+      };
+
+      // ارسال درخواست POST به API
+      fetch('http://127.0.0.1:5000/api/articles/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(articleData)
+      })
+      .then(response => response.json())
+      .then(data => {
+        alert('مقاله با موفقیت اضافه شد!');
+        // پاکسازی فرم
+        document.getElementById('articleForm').reset();
+        // به‌روزرسانی لیست مقالات
+        fetchArticles();
+      })
+      .catch(error => {
+        console.error('خطا در ارسال مقاله:', error);
+        alert('خطا در ارسال مقاله!');
+      });
+    });
+  </script>
+</body>
+</html>
